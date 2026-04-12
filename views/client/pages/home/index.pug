@@ -1,0 +1,320 @@
+extends ../../layouts/default.pug
+
+
+
+block main
+
+  main(class="pt-32 px-6 sm:px-12 pb-20 max-w-[1200px] mx-auto min-h-screen")
+
+    //- ——— Bước 1: Chụp + preview lưới ———
+
+    div(id="pb-step-capture")
+
+      header(class="mb-10 text-center md:text-left")
+
+        p(class="text-primary font-bold text-xs uppercase tracking-widest mb-2") Photo Booth
+
+        h1(class="text-4xl md:text-5xl font-black font-headline tracking-tight text-on-surface mb-3")
+
+          | Camera
+
+        p(class="text-on-surface-variant max-w-xl mx-auto md:mx-0 mb-6")
+
+          | Chụp trước — chọn ảnh — chọn khung sau. Bắt đầu phiên chụp, sau đó bấm chụp từng tấm (đếm ngược 3-2-1).
+
+
+
+        div(id="pb-start-session-wrap" class="flex flex-wrap items-center gap-4")
+
+          button(
+
+            type="button"
+
+            id="pb-btn-start-camera"
+
+            class="inline-flex items-center justify-center rounded-xl bg-primary px-8 py-3.5 text-base font-bold text-on-primary shadow-lg transition hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 disabled:opacity-50 disabled:cursor-not-allowed"
+
+          ) Bắt đầu chụp
+
+          p(class="text-sm text-on-surface-variant") Bật camera và mở phần chụp 8 tấm (chỉ lưu trên trình duyệt).
+
+
+
+      if error
+
+        div(
+
+          class="mb-8 rounded-xl border border-error/40 bg-error-container/10 px-5 py-4 text-on-error-container"
+
+          role="alert"
+
+        )
+
+          p(class="font-semibold font-headline") Đã có lỗi xảy ra
+
+          p(class="text-sm mt-1 opacity-90")= error
+
+
+
+      div(
+
+        id="pb-camera-client-error"
+
+        class="hidden mb-8 rounded-xl border border-error/40 bg-error-container/10 px-5 py-4 text-on-error-container"
+
+        role="alert"
+
+      )
+
+        p(class="font-semibold font-headline") Không bật được camera
+
+        p(class="text-sm mt-1 opacity-90" id="pb-camera-client-error-msg")
+
+
+
+      .grid(class="grid-cols-1 xl:grid-cols-[1.25fr_1fr] gap-6 items-start")
+
+        section(class="space-y-6")
+
+          div(class="relative rounded-2xl overflow-hidden border border-outline-variant/30 bg-surface-container-highest aspect-[4/3] shadow-xl")
+
+            video(
+
+              id="pb-camera"
+
+              class="w-full h-full object-cover scale-x-[-1]"
+
+              playsinline
+
+              muted
+
+              aria-label="Luồng camera trực tiếp"
+
+            )
+
+            div(
+
+              id="pb-camera-placeholder"
+
+              class="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-surface-container text-on-surface-variant z-10"
+
+            )
+
+              span(class="material-symbols-outlined text-5xl text-primary/70") videocam
+
+              p(class="text-sm text-center px-4") Bấm “Bắt đầu chụp” để bật camera.
+
+            div(
+
+              id="pb-countdown-overlay"
+
+              class="hidden absolute inset-0 z-20 flex items-center justify-center bg-black/55 pointer-events-none"
+
+              aria-hidden="true"
+
+            )
+
+              p(
+
+                id="pb-countdown-text"
+
+                class="text-[min(22vw,7rem)] font-black font-headline text-white tabular-nums drop-shadow-[0_4px_24px_rgba(0,0,0,0.8)]"
+
+                aria-live="assertive"
+
+              )
+
+            canvas(id="pb-still-canvas" class="hidden" aria-hidden="true")
+
+
+
+          div(
+
+            id="pb-capture-controls"
+
+            class="hidden rounded-2xl border border-outline-variant/30 bg-surface-container p-4 md:p-5"
+
+          )
+
+            div(class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4")
+
+              p(
+
+                id="pb-capture-progress"
+
+                class="text-lg font-semibold text-on-surface tabular-nums"
+
+                aria-live="polite"
+
+              ) Đã chụp 0/8
+
+              button(
+
+                type="button"
+
+                id="pb-shutter-btn"
+
+                class="inline-flex items-center justify-center rounded-xl border-2 border-on-surface bg-surface-container-highest px-6 py-3 text-base font-bold text-on-surface transition hover:bg-surface-container focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400/50 disabled:opacity-45 disabled:cursor-not-allowed shrink-0"
+
+                disabled
+
+              ) Bấm chụp
+
+
+
+          div(class="rounded-2xl border border-outline-variant/30 bg-surface-container p-4 md:p-6")
+
+            p(class="text-sm text-on-surface-variant mb-3") Canvas preview theo layout đã chọn
+
+            canvas(
+
+              id="pb-output-canvas"
+
+              class="w-full h-auto rounded-xl bg-surface-container-highest border border-outline-variant/20"
+
+              aria-label="Canvas ảnh theo layout"
+
+            )
+
+
+
+          p(class="text-on-surface-variant text-sm")
+
+            | Gợi ý: dùng HTTPS hoặc localhost để trình duyệt cho phép camera.
+
+
+
+        section(class="rounded-2xl border border-outline-variant/30 bg-surface-container p-4 md:p-6")
+
+          h2(class="text-xl md:text-2xl font-black font-headline text-on-surface mb-4") Khung lưới
+
+
+
+          if layouts && layouts.length
+
+            div(id="pb-layout-list" class="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3")
+
+              each layout, idx in layouts
+
+                button(
+
+                  type="button"
+
+                  class="pb-layout-item group flex flex-col items-stretch rounded-lg border border-outline-variant/30 bg-surface-container-highest p-1.5 sm:p-2 text-left transition-all cursor-pointer hover:border-pink-500 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400/50"
+
+                  data-layout-index=idx
+
+                )
+
+                  div(class="flex justify-center items-center min-h-[4.5rem] sm:min-h-[5.25rem]")
+
+                    div(
+
+                      class="relative max-h-[5rem] w-full max-w-[3.25rem] sm:max-w-[3.75rem] mx-auto rounded-md overflow-hidden bg-[#121214] border-2 border-black shadow-[inset_0_0_0_1px_rgba(0,0,0,0.6)]"
+
+                      style=`aspect-ratio: ${layout.canvasW} / ${layout.canvasH}`
+
+                    )
+
+                      each slot in layout.slots
+
+                        - const left = slot.x * 100
+
+                        - const top = slot.y * 100
+
+                        - const width = slot.w * 100
+
+                        - const height = slot.h * 100
+
+                        div(
+
+                          class="absolute box-border bg-neutral-600/85 border-2 border-black pointer-events-none"
+
+                          style=`left:${left}%; top:${top}%; width:${width}%; height:${height}%;`
+
+                        )
+
+                  p(class="text-center text-[11px] sm:text-xs mt-1.5 font-medium text-on-surface line-clamp-2 leading-tight px-0.5")= layout.name
+
+                  p(class="text-center text-[10px] sm:text-[11px] text-on-surface-variant tabular-nums") #{layout.photoCount != null ? layout.photoCount : layout.slots.length} ảnh
+
+          else
+
+            p(class="text-sm text-on-surface-variant") Chưa có layout nào trong hệ thống.
+
+
+
+    //- ——— Bước 2: Chọn 4 / 8 ———
+
+    div(id="pb-step-pick" class="hidden")
+
+      header(class="mb-8 text-center md:text-left")
+
+        h2(class="text-2xl md:text-3xl font-black font-headline text-on-surface mb-2") Chọn 4 ảnh đẹp nhất
+
+        p(class="text-on-surface-variant text-sm max-w-xl") Tick đúng 4 tấm (thứ tự gắn với ô 1→4). Nếu chọn tấm thứ 5, tấm chọn đầu tiên sẽ được bỏ (FIFO).
+
+
+
+      div(id="pb-pick-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-8")
+
+      div(class="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 justify-between")
+
+        p(id="pb-pick-hint" class="text-sm text-on-surface-variant") Đã chọn 0/4 ảnh.
+
+        button(
+
+          type="button"
+
+          id="pb-confirm-pick"
+
+          class="inline-flex items-center justify-center rounded-xl bg-primary px-8 py-3.5 text-base font-bold text-on-primary shadow-lg transition hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none"
+
+          disabled
+
+        ) Xác nhận chọn 4 ảnh
+
+
+
+    //- ——— Bước 3: Khung + preview ———
+
+    div(id="pb-step-frames" class="hidden")
+
+      header(class="mb-8 text-center md:text-left")
+
+        h2(class="text-2xl md:text-3xl font-black font-headline text-on-surface mb-2") Chọn khung trang trí
+
+        p(class="text-on-surface-variant text-sm max-w-xl") Khung lọc theo bố cục 4 ảnh. Bấm một khung để xem trước kết quả.
+
+
+
+      p(id="pb-frames-loading" class="text-sm text-on-surface-variant mb-4 hidden") Đang tải danh sách khung…
+
+      p(id="pb-frames-error" class="text-sm text-error mb-4 hidden" role="alert")
+
+      div(id="pb-frame-list" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-8")
+
+      div(class="rounded-2xl border border-outline-variant/30 bg-surface-container p-4 md:p-6")
+
+        p(class="text-sm text-on-surface-variant mb-3") Xem trước Photobooth
+
+        p(id="pb-frames-aspect-hint" class="text-xs text-amber-700 dark:text-amber-400 mb-3 hidden" role="status")
+
+        div(id="pb-final-canvas-wrap" class="w-full flex justify-center overflow-x-auto")
+
+          canvas(
+
+            id="pb-final-canvas"
+
+            class="rounded-xl max-w-full bg-transparent"
+
+            style="display: block; width: auto; height: auto;"
+
+            aria-label="Ảnh ghép cuối cùng"
+
+          )
+
+
+
+    script(type="application/json" id="pb-layouts-data") !{JSON.stringify(layouts || [])}
+

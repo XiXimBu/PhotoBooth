@@ -1,0 +1,21 @@
+extends ../../layouts/default.pug
+include ../../mixins/box-head.pug
+
+block main
+  .container.my-5
+    .row
+      .col-12
+        .box-head.text-center.mb-4
+          +box-head("Danh sách sản phẩm")
+
+    .row
+      .col-md-4.mb-4
+        .product-item
+          .product-item__image
+            img(src="/images/products/iphone-9.jpg", alt="iPhone 9")
+          .product-item__content
+            h3.product-item__title iPhone 13
+            .product-item__price
+              span.product-item__price-new 80$
+              span.product-item__price-old 100$
+            .product-item__discount -20%
