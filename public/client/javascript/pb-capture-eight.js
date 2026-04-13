@@ -78,9 +78,16 @@
     stillCanvas.width = w;
     stillCanvas.height = h;
     ctx.save();
+    const cf =
+      window.pbPhotoFilter &&
+      typeof window.pbPhotoFilter.getCanvasFilter === "function"
+        ? window.pbPhotoFilter.getCanvasFilter()
+        : "none";
+    ctx.filter = cf === "none" ? "none" : cf;
     ctx.translate(w, 0);
     ctx.scale(-1, 1);
     ctx.drawImage(video, 0, 0, w, h);
+    ctx.filter = "none";
     ctx.restore();
     try {
       return stillCanvas.toDataURL("image/jpeg", 0.92);

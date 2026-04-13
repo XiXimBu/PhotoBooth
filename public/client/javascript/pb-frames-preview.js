@@ -8,6 +8,7 @@
   const loadingEl = document.getElementById("pb-frames-loading");
   const errEl = document.getElementById("pb-frames-error");
   const aspectHintEl = document.getElementById("pb-frames-aspect-hint");
+  const downloadBtn = document.getElementById("pb-download-final");
 
   if (!listEl || !(canvas instanceof HTMLCanvasElement)) {
     return;
@@ -262,6 +263,10 @@
     });
     setError("");
     fitCanvasDisplay(W, H);
+    if (downloadBtn) {
+      downloadBtn.disabled = false;
+      downloadBtn.removeAttribute("aria-disabled");
+    }
   }
 
   const setError = (msg) => {
@@ -315,6 +320,10 @@
           ? e.message
           : "Không vẽ được preview.";
       setError(msg);
+      if (downloadBtn) {
+        downloadBtn.disabled = true;
+        downloadBtn.setAttribute("aria-disabled", "true");
+      }
     }
   };
 
@@ -418,4 +427,28 @@
       void fetchFrames();
     }
   });
+
+  if (downloadBtn) {
+    downloadBtn.disabled = true;
+    downloadBtn.setAttribute("aria-disabled", "true");
+    downloadBtn.addEventListener("click", () => {
+      if (!canvas.width || !canvas.height) {
+        return;
+      }
+      try {
+        const url = canvas.toDataURL("image/png");
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `photobooth-${Date.now()}.png`;
+        a.rel = "noopener";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      } catch (e) {
+        setError(
+          e instanceof Error ? e.message : "Không xuất được ảnh (canvas tainted?)."
+        );
+      }
+    });
+  }
 })();
